@@ -154,42 +154,60 @@ class Sudoku_Widget(QWidget):
             field.setFixedSize(int((w - 150) / 12), int((h - 150) / 15))
             field.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-    def create_font(self, style: str, size=10):
+    @staticmethod
+    def create_font(style: str, size=10):
         font = QFont(style)
         font.setPointSize(int(size))
         return font
 
 
 class Sudoku_HomeScreen(QWidget):
-    def __init__(self, parent):
+    def __init__(self, parent: QMainWindow):
         super().__init__(parent)
-
+        self.parent = parent
 
         layout = QGridLayout()
         layout.setContentsMargins(QMargins(75, 50, 50, 50))
 
-        titel = QLabel('Sudoku')
-        titel.setFont(self.create_font('Times', 48))
+        self.i = {}
 
-        bu_create = QPushButton('Create Sudoku')
-        bu_create.clicked.connect(self.create_medium)
-        bu_create.setFont(self.create_font('Times', 14))
+        self.titel = QLabel('Sudoku')
+        self.titel.setFont(self.create_font('Times', 48))
 
-        bu_load = QPushButton('Load latest Sudoku')
-        bu_load.clicked.connect(self.load_sudoku)
-        bu_load.setFont(self.create_font('Times', 14))
+        self.i['bu_create'] = QPushButton('Create Sudoku')
+        self.i['bu_create'].clicked.connect(self.parent.create_medium)
+        self.i['bu_create'].setFont(self.create_font('Times', 14))
 
-        bu_statistics = QPushButton('Show Statistics')
-        bu_statistics.setFont(self.create_font('Times', 14))
+        self.i['bu_load'] = QPushButton('Load latest Sudoku')
+        self.i['bu_load'].clicked.connect(self.parent.load_sudoku)
+        self.i['bu_load'].setFont(self.create_font('Times', 14))
 
-        layout.addWidget(titel, 0, 0, 1, 3, Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(bu_create, 1, 0, Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(bu_load, 1, 1, Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(bu_statistics, 1, 2, Qt.AlignmentFlag.AlignCenter)
+        self.i['bu_statistics'] = QPushButton('Show Statistics')
+        self.i['bu_statistics'].setFont(self.create_font('Times', 14))
 
-        self.active_widget = QWidget()
-        self.active_widget.setLayout(layout)
-        self.setCentralWidget(self.active_widget)
+        layout.addWidget(self.titel, 0, 0, 1, 3, Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(self.i['bu_create'], 1, 0, Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(self.i['bu_load'], 1, 1, Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(self.i['bu_statistics'], 1, 2, Qt.AlignmentFlag.AlignCenter)
+
+        self.setLayout(layout)
+
+    def resizeEvent(self, event):
+        w = self.geometry().width()
+        h = self.geometry().height()
+        size = abs(int((w - 150 * h - 150) / 10000))
+
+        font1 = self.create_font('Times', int(5 + size * 2))
+        font2 = self.create_font('Times', int(20 + size * 10))
+
+        [self.i[pos].setFont(font1) for pos in self.i.keys()]
+        self.titel.setFont(font2)
+
+    @staticmethod
+    def create_font(style: str = 'Times', size=10):
+        font = QFont(style)
+        font.setPointSize(int(size))
+        return font
 
 
 class Window(QMainWindow):
@@ -246,6 +264,10 @@ class Window(QMainWindow):
         menu_sudoku.addActions((save, load))
         menu_statistics.addAction(statistics_show)
 
+    def home(self):
+        self.active_widget = Sudoku_HomeScreen(self)
+        self.setCentralWidget(self.active_widget)
+
     def save_sudoku(self):
         if isinstance(self.active_widget, Sudoku_Widget):
             with open('Latest_Sudoku.json', 'w') as f:
@@ -262,33 +284,6 @@ class Window(QMainWindow):
                 self.setCentralWidget(self.active_widget)
         except FileNotFoundError:
             return 'E1'
-
-    def home(self):
-        layout = QGridLayout()
-        layout.setContentsMargins(QMargins(75, 50, 50, 50))
-
-        titel = QLabel('Sudoku')
-        titel.setFont(self.create_font('Times', 48))
-
-        bu_create = QPushButton('Create Sudoku')
-        bu_create.clicked.connect(self.create_medium)
-        bu_create.setFont(self.create_font('Times', 14))
-
-        bu_load = QPushButton('Load latest Sudoku')
-        bu_load.clicked.connect(self.load_sudoku)
-        bu_load.setFont(self.create_font('Times', 14))
-
-        bu_statistics = QPushButton('Show Statistics')
-        bu_statistics.setFont(self.create_font('Times', 14))
-
-        layout.addWidget(titel, 0, 0, 1, 3, Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(bu_create, 1, 0, Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(bu_load, 1, 1, Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(bu_statistics, 1, 2, Qt.AlignmentFlag.AlignCenter)
-
-        self.active_widget = QWidget()
-        self.active_widget.setLayout(layout)
-        self.setCentralWidget(self.active_widget)
 
     def completed(self, difficulty):
         if not isinstance(self.active_widget, Sudoku_Widget):
@@ -318,11 +313,6 @@ class Window(QMainWindow):
         self.active_widget = Sudoku_Widget(sudoku, solution, self)
         self.setCentralWidget(self.active_widget)
         self.difficulty = 'hard'
-
-    def create_font(self, style: str = 'Times', size=10):
-        font = QFont(style)
-        font.setPointSize(int(size))
-        return font
 
 
 class Sudoku_Statistics:
