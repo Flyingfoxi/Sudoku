@@ -180,7 +180,6 @@ class Window(QMainWindow):
         menu_sudoku_create = menu_sudoku.addMenu('Create')
         menu_statistics = menu.addMenu('Statistics')
 
-
         save = QAction('Save', self)
         save.triggered.connect(self.save_sudoku)
         save.setStatusTip('This Saves your current Sudoku to finish it later')
