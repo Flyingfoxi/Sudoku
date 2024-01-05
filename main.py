@@ -160,6 +160,38 @@ class Sudoku_Widget(QWidget):
         return font
 
 
+class Sudoku_HomeScreen(QWidget):
+    def __init__(self, parent):
+        super().__init__(parent)
+
+
+        layout = QGridLayout()
+        layout.setContentsMargins(QMargins(75, 50, 50, 50))
+
+        titel = QLabel('Sudoku')
+        titel.setFont(self.create_font('Times', 48))
+
+        bu_create = QPushButton('Create Sudoku')
+        bu_create.clicked.connect(self.create_medium)
+        bu_create.setFont(self.create_font('Times', 14))
+
+        bu_load = QPushButton('Load latest Sudoku')
+        bu_load.clicked.connect(self.load_sudoku)
+        bu_load.setFont(self.create_font('Times', 14))
+
+        bu_statistics = QPushButton('Show Statistics')
+        bu_statistics.setFont(self.create_font('Times', 14))
+
+        layout.addWidget(titel, 0, 0, 1, 3, Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(bu_create, 1, 0, Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(bu_load, 1, 1, Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(bu_statistics, 1, 2, Qt.AlignmentFlag.AlignCenter)
+
+        self.active_widget = QWidget()
+        self.active_widget.setLayout(layout)
+        self.setCentralWidget(self.active_widget)
+
+
 class Window(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -207,7 +239,6 @@ class Window(QMainWindow):
 
         statistics_show = QAction('Show Statistics', self)
         statistics_show.setStatusTip('Let your take a look over your Statistics')
-        statistics_show.triggered.connect(self.update_statistics)
 
         menu_sudoku_create.addActions((create_easy, create_medium, create_hard))
         menu_file.addActions((account_login, account_logout, home))
