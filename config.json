@@ -1,0 +1,10 @@
+{
+  "paths": {
+    "statistics": "Statistics.json",
+    "last_sudoku": "latest_Sudoku.json",
+    "program": "main.py"
+  },
+  "username": "Admin",
+  "password": "3768",
+  "name": "Administrator"
+}

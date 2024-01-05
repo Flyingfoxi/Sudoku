@@ -1,0 +1,6 @@
+1.  ----Make Sudoku_Generator a module working on its own, import it and add the option play (for gui)
+1b. ----Repair Sudoku_Generator Module
+2a. ----Complete Sudoku_Statistics with JSON
+2b. ----Integrate Sudoku_Statistics into the Gui
+2c. Make UI widget for statisticsa
+3. Add every other option
