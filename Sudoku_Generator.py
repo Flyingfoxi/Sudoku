@@ -26,6 +26,7 @@ class Sudoku_Generator:
         return {f"{row}{num}": str(getattr(self, f"{row}{num}")) for row in "ABCDEFGHI" for num in range(1, 10)}
 
     def generate(self):
+        self.__init__()
         for i in range(0, 25):
             self.rows = ['A1', 'B2', 'C3', 'D4', 'E5', 'F6', 'G7', 'H8', 'I9']
             for row in self.rows:
@@ -60,7 +61,7 @@ class Sudoku_Generator:
 
             dictionary = self.__dict__()
             if not any([(True if field == ' ' else False) for field in dictionary.values()]):
-                return self.__dict__()
+                return dictionary
             else:
                 self.__init__()
         raise RuntimeError("Sudoku can't be generated")
@@ -427,7 +428,7 @@ class Sudoku_Generator:
         einfach = ['-E', 'Easy']
         mittel = ['-M', 'Medium']
         schwer = ['-S', 'Difficult']
-        unmoeglich = ['-U', 'Impossible']
+        unmoeglich = ['-I', 'Impossible']
 
         self.generate()
 

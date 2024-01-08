@@ -1,7 +1,8 @@
 {
   "paths": {
-    "statistics": "Statistics.json",
+    "statistics": "statistics.json",
     "last_sudoku": "latest_Sudoku.json",
+    "generator": "Sudoku_Generator.py",
     "program": "main.py"
   },
   "username": "Admin",

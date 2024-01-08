@@ -5,7 +5,7 @@ Created on Tue Sep  5 17:34:14 2023
 Coded by Foxispythonlab
 """
 
-############################ --- Importe --- ##################################
+############################ --- Imports --- ##################################
 
 import os, json
 from Sudoku_Generator import Sudoku_Generator
@@ -81,7 +81,7 @@ class Sudoku_Widget(QWidget):
         layout.addItem(QSpacerItem(10, 25), 3, 0)
         layout.addItem(QSpacerItem(10, 25), 7, 0)
 
-        self.trys = 5
+        self.trys = 10
         self.sudoku_display = sudoku_display.copy()
         self.sudoku_to_solve = sudoku
         self.sudoku_solution = solution
@@ -113,8 +113,9 @@ class Sudoku_Widget(QWidget):
                                                     pos[0], pos[1], 1, 1, Qt.AlignmentFlag.AlignCenter)
                         else:
                             self.trys -= 1
-                            print('You used all trys up' if self.trys <= 0
-                                  else f"Wrong, your used a try, you have {self.trys} left")
+                            print('Trys left: ', self.trys)
+                            if self.trys == 0:
+                                self.parent.home()
 
                     else:
                         field.setText('')
@@ -241,10 +242,12 @@ class Window(QMainWindow):
         create_easy = QAction('Easy', self)
         create_medium = QAction('Medium', self)
         create_hard = QAction('Hard', self)
+        create_impossible = QAction('Impossible', self)
 
         create_easy.triggered.connect(self.create_easy)
         create_medium.triggered.connect(self.create_medium)
         create_hard.triggered.connect(self.create_hard)
+        create_impossible.triggered.connect(self.create_impossible)
 
         account_login = QAction('Login', self)
         account_login.setStatusTip('Login or Create a Account for free to save your statistics')
@@ -258,7 +261,7 @@ class Window(QMainWindow):
         statistics_show = QAction('Show Statistics', self)
         statistics_show.setStatusTip('Let your take a look over your Statistics')
 
-        menu_sudoku_create.addActions((create_easy, create_medium, create_hard))
+        menu_sudoku_create.addActions((create_easy, create_medium, create_hard, create_impossible))
         menu_file.addActions((account_login, account_logout, home))
         menu_sudoku.addSeparator()
         menu_sudoku.addActions((save, load))
@@ -285,12 +288,10 @@ class Window(QMainWindow):
         except FileNotFoundError:
             return 'E1'
 
-    def completed(self, difficulty):
+    def completed(self):
         if not isinstance(self.active_widget, Sudoku_Widget):
             return
-
-        difficulty_index = ("easy" if difficulty == '-E' else "medium" if difficulty == '-M' else "hard")
-        self.statistics.add_statistics(difficulty_index)
+        self.statistics.add_statistics(self.difficulty)
         self.home()
 
     def update_statistics(self):
@@ -313,6 +314,12 @@ class Window(QMainWindow):
         self.active_widget = Sudoku_Widget(sudoku, solution, self)
         self.setCentralWidget(self.active_widget)
         self.difficulty = 'hard'
+
+    def create_impossible(self):
+        sudoku, solution = self.generator.play(True, '-I')
+        self.active_widget = Sudoku_Widget(sudoku, solution, self)
+        self.setCentralWidget(self.active_widget)
+        self.difficulty = 'impossible'
 
 
 class Sudoku_Statistics:
