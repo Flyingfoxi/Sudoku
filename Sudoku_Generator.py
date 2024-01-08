@@ -37,7 +37,6 @@ class Sudoku_Generator:
                     random.shuffle(nums)
                     self.A1, self.A2, self.A3, self.A4, self.A5, self.A6, self.A7, self.A8, self.A9 = nums
 
-
                 elif row == 'I9':
                     self.row_count = 9
                     self.collums = ['I1', 'I2', 'I3', 'I4', 'I5', 'I6', 'I7', 'I8', 'I9']
@@ -169,7 +168,6 @@ class Sudoku_Generator:
                                                                 if count >= len(self.row_miss):
                                                                     self.delete_row()
 
-
                                                 elif self.num not in self.collum8:
                                                     if self.num not in self.sqare_rel3:
                                                         self.Cell8 = self.num
@@ -190,8 +188,6 @@ class Sudoku_Generator:
                                                             count += 1
                                                             if count >= len(self.row_miss):
                                                                 self.delete_row()
-
-
 
                                             elif self.num not in self.collum7:
                                                 if self.num not in self.sqare_rel3:
@@ -214,7 +210,6 @@ class Sudoku_Generator:
                                                         if count >= len(self.row_miss):
                                                             self.delete_row()
 
-
                                         elif self.num not in self.collum6:
                                             if self.num not in self.sqare_rel2:
                                                 self.Cell6 = self.num
@@ -235,8 +230,6 @@ class Sudoku_Generator:
                                                     count += 1
                                                     if count >= len(self.row_miss):
                                                         self.delete_row()
-
-
 
                                     elif self.num not in self.collum5:
                                         if self.num not in self.sqare_rel2:
@@ -259,7 +252,6 @@ class Sudoku_Generator:
                                                 if count >= len(self.row_miss):
                                                     self.delete_row()
 
-
                                 elif self.num not in self.collum4:
                                     if self.num not in self.sqare_rel2:
                                         self.Cell4 = self.num
@@ -280,7 +272,6 @@ class Sudoku_Generator:
                                             count += 1
                                             if count >= len(self.row_miss):
                                                 self.delete_row()
-
 
                             elif self.num not in self.collum3:
                                 if self.num not in self.sqare_rel1:
@@ -303,7 +294,6 @@ class Sudoku_Generator:
                                         if count >= len(self.row_miss):
                                             self.delete_row()
 
-
                         elif self.num not in self.collum2:
                             if self.num not in self.sqare_rel1:
                                 self.Cell2 = self.num
@@ -324,7 +314,6 @@ class Sudoku_Generator:
                                     count += 1
                                     if count >= len(self.row_miss):
                                         self.delete_row()
-
 
                     elif self.num not in self.collum1:
                         if self.num not in self.sqare_rel1:
