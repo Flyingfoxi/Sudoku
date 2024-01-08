@@ -17,7 +17,8 @@ from PyQt6.QtWidgets import (
     QLineEdit,
     QGridLayout,
     QMainWindow,
-    QPushButton
+    QPushButton,
+    QGroupBox
 )
 
 from PyQt6.QtCore import (
@@ -119,8 +120,10 @@ class Sudoku_Widget(QWidget):
 
                     else:
                         field.setText('')
-        if not any([(True if isinstance(field, QLabel) else False) for field in self.sudoku_display.values()]):
+
+        if not any([(False if isinstance(field, QLabel) else True) for field in self.sudoku_display.values()]):
             self.parent.completed()
+
 
     def paintEvent(self, event):
         pen = QPainter()
@@ -185,6 +188,7 @@ class Sudoku_HomeScreen(QWidget):
 
         self.i['bu_statistics'] = QPushButton('Show Statistics')
         self.i['bu_statistics'].setFont(self.create_font('Times', 14))
+        self.i['bu_statistics'].clicked.connect(self.parent.show_statistics)
 
         layout.addWidget(self.titel, 0, 0, 1, 3, Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.i['bu_create'], 1, 0, Qt.AlignmentFlag.AlignCenter)
@@ -211,7 +215,47 @@ class Sudoku_HomeScreen(QWidget):
         return font
 
 
-class Window(QMainWindow):
+class Sudoku_StatisticsView(QWidget):
+    def __init__(self, statistics: dict, parent: QMainWindow):
+        super().__init__(parent)
+        self.parent = parent
+
+        layout = QGridLayout()
+        layout.setContentsMargins(QMargins(100, 50, 100, 50))
+
+        self.titel = QLabel("Statistics")
+        layout.addWidget(self.titel, 0, 0, 1, 7, Qt.AlignmentFlag.AlignCenter)
+
+        content = dict(); row = 2
+        for stat in ["easy", "medium", "hard", "impossible", "total"]:
+            content[stat+'l'] = QLabel(stat)
+            content[stat+'n'] = QLabel(str(statistics[stat]))
+            layout.addWidget(content[stat+'l'], row, 1, 1, 1)
+            layout.addWidget(content[stat+'n'], row, 5, 1, 1, Qt.AlignmentFlag.AlignCenter)
+            row += 1
+        self.content = content
+
+        self.setLayout(layout)
+
+    def resizeEvent(self, event):
+        w = self.geometry().width()
+        h = self.geometry().height()
+        size = abs(int((w - 150 * h - 150) / 10000))
+
+        font1 = self.create_font('Times', int(5 + size * 2))
+        font2 = self.create_font('Times', int(10 + size * 10))
+
+        [self.content[pos].setFont(font1) for pos in self.content.keys()]
+        self.titel.setFont(font2)
+
+    @staticmethod
+    def create_font(style: str = 'Times', size=14):
+        font = QFont(style)
+        font.setPointSize(int(size))
+        return font
+
+
+class Sudoku_Window(QMainWindow):
     def __init__(self):
         super().__init__()
 
@@ -260,6 +304,7 @@ class Window(QMainWindow):
 
         statistics_show = QAction('Show Statistics', self)
         statistics_show.setStatusTip('Let your take a look over your Statistics')
+        statistics_show.triggered.connect(self.show_statistics)
 
         menu_sudoku_create.addActions((create_easy, create_medium, create_hard, create_impossible))
         menu_file.addActions((account_login, account_logout, home))
@@ -294,10 +339,13 @@ class Window(QMainWindow):
         self.statistics.add_statistics(self.difficulty)
         self.home()
 
-    def update_statistics(self):
-        self.statistics.add_statistics("easy")
+    def show_statistics(self):
+        stats = {index: self.statistics.get_statistics(index) for index in ["easy", "medium", "hard", "impossible", "total"]}
+        self.active_widget = Sudoku_StatisticsView(stats, self)
+        self.setCentralWidget(self.active_widget)
 
     def create_easy(self):
+        # Reset to -E for normal games, -S is for developing reasons (very easy)
         sudoku, solution = self.generator.play(True, '-E')
         self.active_widget = Sudoku_Widget(sudoku, solution, self)
         self.setCentralWidget(self.active_widget)
@@ -350,12 +398,11 @@ class Sudoku_Statistics:
 
     def add_statistics(self, typ: str, value: int = 1):
         if typ in ["easy", "medium", "hard"]:
-            self.add_statistics("games_finished", value)
-        self.get_statistics("games_finished")
+            self.add_statistics("total", value)
+        self.get_statistics("total")
         with open(os.path.join(self.dir, self.st_path), 'w') as f:
             self.statistics[typ] += value
             json.dump(self.statistics, f, indent = 1)
-        print(self.statistics)
 
 
 ######################### --- Main Programm --- ###############################
@@ -364,7 +411,7 @@ class Sudoku_Statistics:
 if __name__ == '__main__':
 
     app = QApplication([])
-    mainwin = Window()
+    mainwin = Sudoku_Window()
     mainwin.show()
     app.exec()
 

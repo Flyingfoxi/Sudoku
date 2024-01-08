@@ -425,7 +425,9 @@ class Sudoku_Generator:
         solution = self.__dict__()
 
         if modus in simple:
-            pass
+            for i in range(1):
+                pos = random.choice(tuple(sudoku.keys()))
+                sudoku[pos] = ' '
 
         elif modus in einfach:
             for i in range(40):

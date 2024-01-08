@@ -1,8 +1,7 @@
 {
-    "easy": 5,
-    "medium": 0,
-    "hard": 0,
-    "impossible": 0,
-    "games_finished": 5,
-    "games_started": 0
+ "easy": 0,
+ "medium": 0,
+ "hard": 0,
+ "impossible": 0,
+ "total": 0
 }
