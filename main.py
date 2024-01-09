@@ -18,7 +18,6 @@ from PyQt6.QtWidgets import (
     QGridLayout,
     QMainWindow,
     QPushButton,
-    QGroupBox
 )
 
 from PyQt6.QtCore import (
@@ -38,14 +37,14 @@ from PyQt6.QtGui import (
 
 
 class Sudoku_Widget(QWidget):
-    def __init__(self, sudoku: dict, solution: dict, parent: QWidget = None):
+    def __init__(self, sudoku: dict, solution: dict, parent: QWidget = None, trys = 5):
         super().__init__(parent)
         self.parent = parent
 
         self.setWindowTitle('Sudoku - Visualizer')
-        self.setGeometry(0, 0, 800, 500)
+        self.setGeometry(0, 0, 800, 800)
 
-        self.size = abs((650 * 350) / 10000)
+        self.size = abs((800 * 800) / 10000)
 
         layout = QGridLayout()
         layout.setContentsMargins(QMargins(75, 75, 75, 75))
@@ -70,9 +69,9 @@ class Sudoku_Widget(QWidget):
                             sudoku_display[f"{row}{collum}"].setText(
                                 (sudoku[f"{row}{collum}"] if sudoku[f"{row}{collum}"] != ' ' else ''))
                             sudoku_display[f"{row}{collum}"].textChanged.connect(self.check)
-
                         else:
                             sudoku_display[f"{row}{collum}"] = QLabel(sudoku[f"{row}{collum}"])
+                            sudoku_display[f"{row}{collum}"].setStyleSheet("color: #000000 ; font-weight: bold ")
                         layout.addWidget(sudoku_display[f"{row}{collum}"], ord(row.lower()) - (96 - modr),
                                          int(collum) + modc,
                                          Qt.AlignmentFlag.AlignCenter)
@@ -82,7 +81,7 @@ class Sudoku_Widget(QWidget):
         layout.addItem(QSpacerItem(10, 25), 3, 0)
         layout.addItem(QSpacerItem(10, 25), 7, 0)
 
-        self.trys = 10
+        self.trys = trys
         self.sudoku_display = sudoku_display.copy()
         self.sudoku_to_solve = sudoku
         self.sudoku_solution = solution
@@ -95,7 +94,7 @@ class Sudoku_Widget(QWidget):
         for key in self.sudoku_display.keys():
             field = self.sudoku_display[key]
             if isinstance(field, QLineEdit):
-                if True:
+                if not '-' in field.text():
                     if field.text() in nums:
                         pos = self.layout().getItemPosition(self.layout().indexOf(field))
 
@@ -114,14 +113,17 @@ class Sudoku_Widget(QWidget):
                                                     pos[0], pos[1], 1, 1, Qt.AlignmentFlag.AlignCenter)
                         else:
                             self.trys -= 1
+                            field.setText('')
                             print('Trys left: ', self.trys)
                             if self.trys == 0:
-                                self.parent.home()
+                                [obj.setReadOnly(True) for obj in self.sudoku_display.values() if isinstance(obj, QLineEdit)]
+                                self.parent.failed()
 
                     else:
                         field.setText('')
 
         if not any([(False if isinstance(field, QLabel) else True) for field in self.sudoku_display.values()]):
+            [obj.setEnabled(False) for obj in self.sudoku_display if isinstance(obj, QLineEdit)]
             self.parent.completed()
 
 
@@ -133,6 +135,10 @@ class Sudoku_Widget(QWidget):
         pen_style.setWidth(int(self.size / 5 + 1))
         pen.setPen(pen_style)
 
+        pen_fine = QPen()
+        pen_fine.setWidth(1)
+
+
         w = self.geometry().width()
         h = self.geometry().height()
 
@@ -140,7 +146,6 @@ class Sudoku_Widget(QWidget):
         pen.drawLine(int(w / 3) * 2 - 20, 75, int(w / 3) * 2 - 20, h - 75)
         pen.drawLine(75, int(h / 3) + 20, w - 75, int(h / 3) + 20)
         pen.drawLine(75, int(h / 3) * 2 - 20, w - 75, int(h / 3) * 2 - 20)
-
         pen.end()
 
     def getsize(self):
@@ -157,7 +162,7 @@ class Sudoku_Widget(QWidget):
             field.setFont(self.create_font('Times', int(self.size * 1.25 + 5)))
             field.setFixedSize(int((w - 150) / 12), int((h - 150) / 15))
             field.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
+           
     @staticmethod
     def create_font(style: str, size=10):
         font = QFont(style)
@@ -227,7 +232,7 @@ class Sudoku_StatisticsView(QWidget):
         layout.addWidget(self.titel, 0, 0, 1, 7, Qt.AlignmentFlag.AlignCenter)
 
         content = dict(); row = 2
-        for stat in ["easy", "medium", "hard", "impossible", "total"]:
+        for stat in ["easy", "medium", "hard", "master", "total"]:
             content[stat+'l'] = QLabel(stat)
             content[stat+'n'] = QLabel(str(statistics[stat]))
             layout.addWidget(content[stat+'l'], row, 1, 1, 1)
@@ -253,14 +258,53 @@ class Sudoku_StatisticsView(QWidget):
         font = QFont(style)
         font.setPointSize(int(size))
         return font
+    
 
+class Sudoku_Messager(QWidget):
+    def __init__(self, parent, titel_message, message):
+        super().__init__()
+
+        self.setWindowTitle('Sudoku - v1.0 Alpha')
+        self.setGeometry(100, 100, 400, 250)
+        self.show()
+
+        layout = QGridLayout()
+
+        titel = QLabel("Sudoku")
+        titel.setFont(self.create_font())
+        layout.addWidget(titel, 0, 0, Qt.AlignmentFlag.AlignCenter)
+
+        main_message = QLabel(titel_message)
+        main_message.setFont(self.create_font(size=24, bold = True))
+        layout.addWidget(main_message, 1, 0, Qt.AlignmentFlag.AlignCenter)
+
+        message = QLabel(message)
+        message.setWordWrap(True)
+        message.setFont(self.create_font('Times', 10))
+        layout.addWidget(message, 2, 0, Qt.AlignmentFlag.AlignCenter)
+
+        close = QPushButton("close")
+        close.clicked.connect(self.close)
+        layout.addWidget(close, 3, 0, Qt.AlignmentFlag.AlignCenter)
+
+        self.setLayout(layout)
+
+    def close(self):
+        self.destroy()
+
+    @staticmethod
+    def create_font(style: str = 'Times', size=14, bold = False):
+        font = QFont(style)
+        font.setPointSize(int(size))
+        font.setBold(bold)
+        return font
 
 class Sudoku_Window(QMainWindow):
     def __init__(self):
         super().__init__()
 
         self.setWindowTitle('Sudoku - v1.0 Alpha')
-        self.setGeometry(0, 0, 800, 500)
+        self.setGeometry(0, 0, 1100, 800)
 
         self.generator = Sudoku_Generator()
         self.statistics = Sudoku_Statistics()
@@ -286,12 +330,12 @@ class Sudoku_Window(QMainWindow):
         create_easy = QAction('Easy', self)
         create_medium = QAction('Medium', self)
         create_hard = QAction('Hard', self)
-        create_impossible = QAction('Impossible', self)
+        create_master = QAction('Master Mode', self)
 
         create_easy.triggered.connect(self.create_easy)
         create_medium.triggered.connect(self.create_medium)
         create_hard.triggered.connect(self.create_hard)
-        create_impossible.triggered.connect(self.create_impossible)
+        create_master.triggered.connect(self.create_master)
 
         account_login = QAction('Login', self)
         account_login.setStatusTip('Login or Create a Account for free to save your statistics')
@@ -306,11 +350,13 @@ class Sudoku_Window(QMainWindow):
         statistics_show.setStatusTip('Let your take a look over your Statistics')
         statistics_show.triggered.connect(self.show_statistics)
 
-        menu_sudoku_create.addActions((create_easy, create_medium, create_hard, create_impossible))
+        menu_sudoku_create.addActions((create_easy, create_medium, create_hard, create_master))
         menu_file.addActions((account_login, account_logout, home))
         menu_sudoku.addSeparator()
         menu_sudoku.addActions((save, load))
         menu_statistics.addAction(statistics_show)
+    def failed(self):
+        self.message = Sudoku_Messager(self, "Try Again", "You used to many false trys, its not over, try again")
 
     def home(self):
         self.active_widget = Sudoku_HomeScreen(self)
@@ -337,37 +383,38 @@ class Sudoku_Window(QMainWindow):
         if not isinstance(self.active_widget, Sudoku_Widget):
             return
         self.statistics.add_statistics(self.difficulty)
-        self.home()
+        self.message = Sudoku_Messager(self, "Gratulations", "You sucessfully completet the Sudoku.")
+
 
     def show_statistics(self):
-        stats = {index: self.statistics.get_statistics(index) for index in ["easy", "medium", "hard", "impossible", "total"]}
+        stats = {index: self.statistics.get_statistics(index) for index in ["easy", "medium", "hard", "master", "total"]}
         self.active_widget = Sudoku_StatisticsView(stats, self)
         self.setCentralWidget(self.active_widget)
 
     def create_easy(self):
         # Reset to -E for normal games, -S is for developing reasons (very easy)
         sudoku, solution = self.generator.play(True, '-E')
-        self.active_widget = Sudoku_Widget(sudoku, solution, self)
+        self.active_widget = Sudoku_Widget(sudoku, solution, self, 15)
         self.setCentralWidget(self.active_widget)
         self.difficulty = 'easy'
 
     def create_medium(self):
         sudoku, solution = self.generator.play(True, '-M')
-        self.active_widget = Sudoku_Widget(sudoku, solution, self)
+        self.active_widget = Sudoku_Widget(sudoku, solution, self, 8)
         self.setCentralWidget(self.active_widget)
         self.difficulty = 'medium'
 
     def create_hard(self):
         sudoku, solution = self.generator.play(True, '-S')
-        self.active_widget = Sudoku_Widget(sudoku, solution, self)
+        self.active_widget = Sudoku_Widget(sudoku, solution, self, 3)
         self.setCentralWidget(self.active_widget)
         self.difficulty = 'hard'
 
-    def create_impossible(self):
+    def create_master(self):
         sudoku, solution = self.generator.play(True, '-I')
-        self.active_widget = Sudoku_Widget(sudoku, solution, self)
+        self.active_widget = Sudoku_Widget(sudoku, solution, self, 1)
         self.setCentralWidget(self.active_widget)
-        self.difficulty = 'impossible'
+        self.difficulty = 'master'
 
 
 class Sudoku_Statistics:
@@ -377,6 +424,7 @@ class Sudoku_Statistics:
                 self.config = json.load(f)
                 self.dir = ""
         else:
+            print('1')
             path_to_user = os.path.expanduser('~')
             path_to_dir = "Appdata\\Local\\Programms\\Sudoku"
             self.dir = os.path.join(path_to_user, path_to_dir)
@@ -397,7 +445,7 @@ class Sudoku_Statistics:
             raise 'E2'
 
     def add_statistics(self, typ: str, value: int = 1):
-        if typ in ["easy", "medium", "hard"]:
+        if typ in ["easy", "medium", "hard", "master"]:
             self.add_statistics("total", value)
         self.get_statistics("total")
         with open(os.path.join(self.dir, self.st_path), 'w') as f:
