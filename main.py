@@ -94,7 +94,7 @@ class Sudoku_Widget(QWidget):
         for key in self.sudoku_display.keys():
             field = self.sudoku_display[key]
             if isinstance(field, QLineEdit):
-                if not '-' in field.text():
+                if '-' not in field.text():
                     if field.text() in nums:
                         pos = self.layout().getItemPosition(self.layout().indexOf(field))
 
@@ -126,7 +126,6 @@ class Sudoku_Widget(QWidget):
             [obj.setEnabled(False) for obj in self.sudoku_display if isinstance(obj, QLineEdit)]
             self.parent.completed()
 
-
     def paintEvent(self, event):
         pen = QPainter()
         pen.begin(self)
@@ -137,7 +136,6 @@ class Sudoku_Widget(QWidget):
 
         pen_fine = QPen()
         pen_fine.setWidth(1)
-
 
         w = self.geometry().width()
         h = self.geometry().height()
@@ -268,6 +266,8 @@ class Sudoku_Messager(QWidget):
         self.setGeometry(100, 100, 400, 250)
         self.show()
 
+        self.parent = parent
+
         layout = QGridLayout()
 
         titel = QLabel("Sudoku")
@@ -298,6 +298,7 @@ class Sudoku_Messager(QWidget):
         font.setPointSize(int(size))
         font.setBold(bold)
         return font
+
 
 class Sudoku_Window(QMainWindow):
     def __init__(self):
@@ -355,6 +356,7 @@ class Sudoku_Window(QMainWindow):
         menu_sudoku.addSeparator()
         menu_sudoku.addActions((save, load))
         menu_statistics.addAction(statistics_show)
+
     def failed(self):
         self.message = Sudoku_Messager(self, "Try Again", "You used to many false trys, its not over, try again")
 
@@ -384,7 +386,6 @@ class Sudoku_Window(QMainWindow):
             return
         self.statistics.add_statistics(self.difficulty)
         self.message = Sudoku_Messager(self, "Gratulations", "You sucessfully completet the Sudoku.")
-
 
     def show_statistics(self):
         stats = {index: self.statistics.get_statistics(index) for index in ["easy", "medium", "hard", "master", "total"]}
