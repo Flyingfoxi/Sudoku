@@ -54,7 +54,7 @@ class Sudoku_Generator:
                          f"self.{row[0]}1, self.{row[0]}2, self.{row[0]}3,"
                          f" self.{row[0]}4, self.{row[0]}5, self.{row[0]}6, "
                          f" self.{row[0]}7, self.{row[0]}8, self.{row[0]}9")
-                    for i in range(250):
+                    for _ in range(250):
                         if self.generate_row():
                             break
 
@@ -336,7 +336,8 @@ class Sudoku_Generator:
                                 if count >= len(self.row_miss):
                                     self.delete_row()
 
-    def generate_collum(self, collum):
+    @staticmethod
+    def generate_collum(collum):
         if len(collum) < 10:
             return list(set([str(i) for i in range(1, 10)]) - set(collum))[0]
         else:
@@ -387,7 +388,7 @@ class Sudoku_Generator:
         self.Cell1 = self.Cell2 = self.Cell3 = self.Cell4 = self.Cell5 = self.Cell6 = self.Cell7 = self.Cell8 = self.Cell9 = ' '
 
     def ausgabe(self):
-        print(('\n\n\n'))
+        print('\n\n\n')
         print(' \t   >-- Sudoku  --<\n')
         print(self.A1, ' ', self.A2, ' ', self.A3, ' ¦ ', self.A4, ' ', self.A5, ' ', self.A6, ' ¦ ', self.A7, ' ',
               self.A8, ' ', self.A9)
@@ -463,4 +464,4 @@ if __name__ == '__main__':
     sudo = Sudoku_Generator()
     sudo.play(False, '-S')
 
-    #input('Press return to close: ')
+    input('Press return to close: ')
