@@ -18,18 +18,21 @@ from PyQt6.QtWidgets import (
     QGridLayout,
     QMainWindow,
     QPushButton,
+    QCheckBox
 )
 
 from PyQt6.QtCore import (
     Qt,
     QMargins,
+    QSize
 )
 
 from PyQt6.QtGui import (
     QPainter,
     QPen,
     QAction,
-    QFont
+    QFont,
+    QIcon
 )
 
 
@@ -269,8 +272,62 @@ class Sudoku_StatisticsView(QWidget):
     
 
 class Sudoku_SettingsView(QWidget):
-    def __init__(self, parent = None):
-        super().__init__(self, parent)
+    def __init__(self, config_file, parent = None):
+        super().__init__(parent)
+        self.parent = parent
+
+        layout = QGridLayout()
+        self.config = config_file
+        self.font_type = config_file["window"]["font_type"]
+
+        self.titel = QLabel("Settings")
+        self.apply = QPushButton("Apply")
+        self.apply.clicked.connect(self.update_settings)
+        layout.addWidget(self.titel, 0, 0, 1, 2, Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(self.apply, 3, 0, 1, 2, Qt.AlignmentFlag.AlignCenter)
+
+        self.auto_commit = (QLabel("Auto - Commit: "), QCheckBox(), ('widget', 'auto-commit'), ("True", "False"))
+        self.auto_commit[1].setChecked(bool(config_file["widget"]["auto-commit"]))
+        self.auto_commit[1].setIcon(QIcon("automatic.png"))
+        self.auto_commit[1].setIconSize(QSize(50, 50))
+        self.standart_difficuly = (QLabel("Standart Difficulty: "),  QLineEdit(config_file["window"]["standart_difficulty"]), ('window', 'standart_difficulty'),
+                                   ("easy", "medium", "hard", "master"))
+
+        self.settings = (self.auto_commit, self.standart_difficuly)
+        for row in range(2):
+            for collum in range(2):
+                layout.addWidget(self.settings[row][collum], row + 1, collum, 1, 1, Qt.AlignmentFlag.AlignCenter)
+
+        self.setLayout(layout)
+
+    def update_settings(self):
+        for setting in self.settings:
+            if isinstance(setting[1], QCheckBox):
+                if str(setting[1].isChecked()) in setting[3]:
+                    self.config[setting[2][0]][setting[2][1]] = str(setting[1].isChecked())
+
+            elif isinstance(setting[1], QLineEdit):
+                if str(setting[1].text()) in setting[3]:
+                    self.config[setting[2][0]][setting[2][1]] = str(setting[1].text())
+        self.parent.home()
+
+
+    def resizeEvent(self, event):
+        w = self.geometry().width()
+        h = self.geometry().height()
+        size = abs(int((w - 150 * h - 150) / 10000))
+
+        font1 = self.create_font(int(5 + size * 2))
+        font2 = self.create_font(int(20 + size * 6))
+
+        [setup[0].setFont(font1) for setup in self.settings]
+        [setup[1].setFont(font1) for setup in self.settings]
+        self.titel.setFont(font2)
+
+    def create_font(self, size=14):
+        font = QFont(self.font_type)
+        font.setPointSize(int(size))
+        return font
     
 
 class Sudoku_Messager(QWidget):
@@ -357,20 +414,24 @@ class Sudoku_Window(QMainWindow):
         create_master.triggered.connect(self.create_master)
 
         account_login = QAction('Login', self)
-        account_login.setStatusTip('Login or Create a Account for free to save your statistics')
-
         account_logout = QAction('Logout', self)
 
         home = QAction('Home', self)
         home.setStatusTip('Returns to the starting Padge')
         home.triggered.connect(self.home)
 
+        settings = QAction('Settings', self)
+        settings.setStatusTip("To change the settings how the game Works")
+        settings.triggered.connect(self.show_settings)
+
         statistics_show = QAction('Show Statistics', self)
         statistics_show.setStatusTip('Let your take a look over your Statistics')
         statistics_show.triggered.connect(self.show_statistics)
 
         menu_sudoku_create.addActions((create_easy, create_medium, create_hard, create_master))
-        menu_file.addActions((account_login, account_logout, home))
+        menu_file.addAction(home)
+        menu_file.addSeparator()
+        menu_file.addAction(settings)
         menu_sudoku.addSeparator()
         menu_sudoku.addActions((save, load))
         menu_statistics.addAction(statistics_show)
@@ -386,7 +447,7 @@ class Sudoku_Window(QMainWindow):
     def save_sudoku(self):
         if isinstance(self.active_widget, Sudoku_Widget):
             with open('Latest_Sudoku.json', 'w') as f:
-                values = [dict(), self.active_widget.sudoku_solution, self.difficulty]
+                values = [dict(), self.active_widget.sudoku_solution, self.difficulty, self.active_widget.trys]
                 for field in self.active_widget.sudoku_display.keys():
                     values[0][field] = self.active_widget.sudoku_display[field].text()
                 json.dump(values, f, indent = 1)
@@ -394,8 +455,10 @@ class Sudoku_Window(QMainWindow):
     def load_sudoku(self):
         try:
             with open('Latest_Sudoku.json', 'r') as f:
-                sudoku, solution, self.difficulty = json.load(f)
-                self.active_widget = Sudoku_Widget(self.wis, sudoku, solution, self, self.difficulty)
+                sudoku, solution, self.difficulty, trys = json.load(f)
+                config = dict(self.wis)
+                config["trys"][self.difficulty] = trys
+                self.active_widget = Sudoku_Widget(config, sudoku, solution, self, self.difficulty)
                 self.setCentralWidget(self.active_widget)
         except FileNotFoundError:
             return 'E1'
@@ -410,6 +473,10 @@ class Sudoku_Window(QMainWindow):
     def show_statistics(self):
         stats = {index: self.statistics.get_statistics(index) for index in ["easy", "medium", "hard", "master", "total"]}
         self.active_widget = Sudoku_StatisticsView(stats, self, self.mws["font_type"])
+        self.setCentralWidget(self.active_widget)
+
+    def show_settings(self):
+        self.active_widget = Sudoku_SettingsView(self.setup.config["setup"], self)
         self.setCentralWidget(self.active_widget)
 
     def create_easy(self):
@@ -427,7 +494,7 @@ class Sudoku_Window(QMainWindow):
         
     def create_hard(self):
         self.difficulty = 'hard'
-        sudoku, solution = self.generator.play(True, '-S')
+        sudoku, solution = self.generator.play(True, '-H')
         self.active_widget = Sudoku_Widget(self.wis, sudoku, solution, self, self.difficulty)
         self.setCentralWidget(self.active_widget)
         
@@ -484,6 +551,14 @@ class Sudoku_Settings:
     
     def setup_generator(self):
         return self.config["setup"]["generator"]
+
+    def get_setup(self):
+        return self.config["setup"]
+
+    def update_setup(self, config):
+        self.config["setup"] = config
+        with open(os.path.join(self.dir, "config.json"), 'w') as f:
+            json.dump(self.config, fp = f, indent= 1)
 
 
 ######################### --- Main Programm --- ###############################

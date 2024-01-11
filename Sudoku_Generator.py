@@ -418,7 +418,7 @@ class Sudoku_Generator:
         simple = ['-S', 'Simple']
         einfach = ['-E', 'Easy']
         mittel = ['-M', 'Medium']
-        schwer = ['-S', 'Difficult']
+        schwer = ['-H', 'Difficult']
         unmoeglich = ['-I', 'Impossible']
 
         self.generate()
