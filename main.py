@@ -222,7 +222,6 @@ class Sudoku_HomeScreen(QWidget):
         [self.i[pos].setFont(font1) for pos in self.i.keys()]
         self.titel.setFont(font2)
 
-    
     def create_font(self, size=10):
         font = QFont(self.font_type)
         font.setPointSize(int(size))
@@ -377,7 +376,8 @@ class Sudoku_Window(QMainWindow):
         menu_statistics.addAction(statistics_show)
 
     def failed(self):
-        self.message = Sudoku_Messager(self, "Try Again", "You used to many false trys, its not over, try again")
+        self.message = Sudoku_Messager(self, "Try Again",
+                                       "You used to many false trys", self.mws["font_type"])
 
     def home(self):
         self.active_widget = Sudoku_HomeScreen(self, self.mws["standart_difficulty"], self.mws["font_type"])
@@ -404,7 +404,8 @@ class Sudoku_Window(QMainWindow):
         if not isinstance(self.active_widget, Sudoku_Widget):
             return
         self.statistics.add_statistics(self.difficulty)
-        self.message = Sudoku_Messager(self, "Gratulations", "You sucessfully completet the Sudoku.")
+        self.message = Sudoku_Messager(self, "Gratulations", "You sucessfully completet the Sudoku.",
+                                       self.mws["font_type"])
 
     def show_statistics(self):
         stats = {index: self.statistics.get_statistics(index) for index in ["easy", "medium", "hard", "master", "total"]}
@@ -438,9 +439,9 @@ class Sudoku_Window(QMainWindow):
         
 
 class Sudoku_Statistics:
-    def __init__(self, config: dict, dir):
+    def __init__(self, config: dict, sdir):
         self.st_path = config["paths"]["statistics"]
-        self.dir = dir
+        self.dir = sdir
 
     def get_statistics(self, typ: str):
         try:
@@ -483,11 +484,6 @@ class Sudoku_Settings:
     
     def setup_generator(self):
         return self.config["setup"]["generator"]
-
-
-    
-
-
 
 
 ######################### --- Main Programm --- ###############################

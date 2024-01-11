@@ -412,6 +412,7 @@ class Sudoku_Generator:
               self.I8, ' ', self.I9)
         print('\n\n')
 
+    # noinspection PyDefaultArgument
     def play(self, for_gui = True, modus='-M', key = {"easy": 40, "medium": 55, "hard": 70, "master": 100}):
 
         simple = ['-S', 'Simple']
