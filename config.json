@@ -5,6 +5,29 @@
     "generator": "Sudoku_Generator.py",
     "program": "main.py"
   },
+  "setup" : {
+    "window": {
+      "standart_difficulty": "medium",
+      "font_type": "Arial"
+      },
+    
+    "widget": {
+      "auto-commit": "True",
+      "font_type": "Arial",
+      "trys" : {
+        "easy": 8,
+        "medium": 5,
+        "hard": 3,
+        "master": 1
+        }
+      },
+    "generator": {
+      "easy": 40,
+      "medium": 55,
+      "hard": 70,
+      "master": 100
+    }
+  },
   "username": "Admin",
   "password": "3768",
   "name": "Administrator"

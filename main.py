@@ -37,7 +37,7 @@ from PyQt6.QtGui import (
 
 
 class Sudoku_Widget(QWidget):
-    def __init__(self, sudoku: dict, solution: dict, parent: QWidget = None, trys = 5):
+    def __init__(self, config: dict, sudoku: dict, solution: dict, parent: QMainWindow = None, difficulty = "medium"):
         super().__init__(parent)
         self.parent = parent
 
@@ -52,6 +52,8 @@ class Sudoku_Widget(QWidget):
         nums = [0, 1, 2, 4, 5, 6, 8, 9, 10]
         letters = [i for i in 'ABCDEFGHI']
         self.translation_to_letters = {int(nums[i]): letters[i] for i in range(len(nums))}
+        self.auto_commit = (config["auto-commit"] == "True")
+        self.config = config
 
         sudoku_display = {}
         modr = -2
@@ -68,20 +70,26 @@ class Sudoku_Widget(QWidget):
                             sudoku_display[f"{row}{collum}"] = QLineEdit()
                             sudoku_display[f"{row}{collum}"].setText(
                                 (sudoku[f"{row}{collum}"] if sudoku[f"{row}{collum}"] != ' ' else ''))
-                            sudoku_display[f"{row}{collum}"].textChanged.connect(self.check)
+                            if self.auto_commit:
+                                sudoku_display[f"{row}{collum}"].textChanged.connect(self.check)
                         else:
                             sudoku_display[f"{row}{collum}"] = QLabel(sudoku[f"{row}{collum}"])
                             sudoku_display[f"{row}{collum}"].setStyleSheet("color: #000000 ; font-weight: bold ")
                         layout.addWidget(sudoku_display[f"{row}{collum}"], ord(row.lower()) - (96 - modr),
                                          int(collum) + modc,
                                          Qt.AlignmentFlag.AlignCenter)
+                        
+        if not self.auto_commit:
+            self.commit = QPushButton("Prüfen")
+            self.commit.clicked.connect(self.check)
+            layout.addWidget(self.commit, 12, 1, 1, 10, Qt.AlignmentFlag.AlignCenter)
 
         layout.addItem(QSpacerItem(25, 10), 0, 3)
         layout.addItem(QSpacerItem(25, 10), 0, 7)
         layout.addItem(QSpacerItem(10, 25), 3, 0)
         layout.addItem(QSpacerItem(10, 25), 7, 0)
 
-        self.trys = trys
+        self.trys = config["trys"][difficulty]
         self.sudoku_display = sudoku_display.copy()
         self.sudoku_to_solve = sudoku
         self.sudoku_solution = solution
@@ -107,7 +115,7 @@ class Sudoku_Widget(QWidget):
                             self.sudoku_display[key] = QLabel(num)
 
                             self.getsize()
-                            self.sudoku_display[key].setFont(self.create_font('Times', int(5 + (self.size + 1.25))))
+                            self.sudoku_display[key].setFont(self.create_font(int(5 + (self.size + 1.25))))
                             # noinspection PyArgumentList
                             self.layout().addWidget(self.sudoku_display[key],
                                                     pos[0], pos[1], 1, 1, Qt.AlignmentFlag.AlignCenter)
@@ -140,11 +148,17 @@ class Sudoku_Widget(QWidget):
         w = self.geometry().width()
         h = self.geometry().height()
 
-        pen.drawLine(int(w / 3) + 20, 75, int(w / 3) + 20, h - 75)
-        pen.drawLine(int(w / 3) * 2 - 20, 75, int(w / 3) * 2 - 20, h - 75)
-        pen.drawLine(75, int(h / 3) + 20, w - 75, int(h / 3) + 20)
-        pen.drawLine(75, int(h / 3) * 2 - 20, w - 75, int(h / 3) * 2 - 20)
-        pen.end()
+        if self.auto_commit:
+            pen.drawLine(int(w / 3) + 20, 75, int(w / 3) + 20, h - 75)
+            pen.drawLine(int(w / 3) * 2 - 20, 75, int(w / 3) * 2 - 20, h - 75)
+            pen.drawLine(75, int(h / 3) + 20, w - 75, int(h / 3) + 20)
+            pen.drawLine(75, int(h / 3) * 2 - 20, w - 75, int(h / 3) * 2 - 20)
+        else:
+            pen.drawLine(int(w / 3) + 20, 75, int(w / 3) + 20, h - 125)
+            pen.drawLine(int(w / 3) * 2 - 20, 75, int(w / 3) * 2 - 20, h - 125)
+            pen.drawLine(75, int(h / 3), w - 75, int(h / 3))
+            pen.drawLine(75, int(h / 3) * 2 - 50, w - 75, int(h / 3) * 2 - 50)
+            pen.end()
 
     def getsize(self):
         w = self.geometry().width()
@@ -157,21 +171,21 @@ class Sudoku_Widget(QWidget):
         w, h = self.getsize()
 
         for field in self.sudoku_display.values():
-            field.setFont(self.create_font('Times', int(self.size * 1.25 + 5)))
+            field.setFont(self.create_font(int(self.size * 1.25 + 5)))
             field.setFixedSize(int((w - 150) / 12), int((h - 150) / 15))
             field.setAlignment(Qt.AlignmentFlag.AlignCenter)
            
-    @staticmethod
-    def create_font(style: str, size=10):
-        font = QFont(style)
+    def create_font(self, size=10):
+        font = QFont(self.config["font_type"])
         font.setPointSize(int(size))
         return font
 
 
 class Sudoku_HomeScreen(QWidget):
-    def __init__(self, parent: QMainWindow):
+    def __init__(self, parent: QMainWindow, standart_difficulty, font_type):
         super().__init__(parent)
         self.parent = parent
+        self.font_type = font_type
 
         layout = QGridLayout()
         layout.setContentsMargins(QMargins(75, 50, 50, 50))
@@ -179,18 +193,14 @@ class Sudoku_HomeScreen(QWidget):
         self.i = {}
 
         self.titel = QLabel('Sudoku')
-        self.titel.setFont(self.create_font('Times', 48))
 
         self.i['bu_create'] = QPushButton('Create Sudoku')
-        self.i['bu_create'].clicked.connect(self.parent.create_medium)
-        self.i['bu_create'].setFont(self.create_font('Times', 14))
+        self.i['bu_create'].clicked.connect(getattr(self.parent, f"create_{standart_difficulty}"))
 
         self.i['bu_load'] = QPushButton('Load latest Sudoku')
         self.i['bu_load'].clicked.connect(self.parent.load_sudoku)
-        self.i['bu_load'].setFont(self.create_font('Times', 14))
 
         self.i['bu_statistics'] = QPushButton('Show Statistics')
-        self.i['bu_statistics'].setFont(self.create_font('Times', 14))
         self.i['bu_statistics'].clicked.connect(self.parent.show_statistics)
 
         layout.addWidget(self.titel, 0, 0, 1, 3, Qt.AlignmentFlag.AlignCenter)
@@ -199,29 +209,31 @@ class Sudoku_HomeScreen(QWidget):
         layout.addWidget(self.i['bu_statistics'], 1, 2, Qt.AlignmentFlag.AlignCenter)
 
         self.setLayout(layout)
+        self.resizeEvent(1)
 
     def resizeEvent(self, event):
         w = self.geometry().width()
         h = self.geometry().height()
         size = abs(int((w - 150 * h - 150) / 10000))
 
-        font1 = self.create_font('Times', int(5 + size * 2))
-        font2 = self.create_font('Times', int(20 + size * 10))
+        font1 = self.create_font(int(5 + size * 2))
+        font2 = self.create_font(int(20 + size * 10))
 
         [self.i[pos].setFont(font1) for pos in self.i.keys()]
         self.titel.setFont(font2)
 
-    @staticmethod
-    def create_font(style: str = 'Times', size=10):
-        font = QFont(style)
+    
+    def create_font(self, size=10):
+        font = QFont(self.font_type)
         font.setPointSize(int(size))
         return font
 
 
 class Sudoku_StatisticsView(QWidget):
-    def __init__(self, statistics: dict, parent: QMainWindow):
+    def __init__(self, statistics: dict, parent: QMainWindow, font_type):
         super().__init__(parent)
         self.parent = parent
+        self.font_type = font_type
 
         layout = QGridLayout()
         layout.setContentsMargins(QMargins(100, 50, 100, 50))
@@ -245,21 +257,25 @@ class Sudoku_StatisticsView(QWidget):
         h = self.geometry().height()
         size = abs(int((w - 150 * h - 150) / 10000))
 
-        font1 = self.create_font('Times', int(5 + size * 2))
-        font2 = self.create_font('Times', int(10 + size * 10))
+        font1 = self.create_font(int(5 + size * 2))
+        font2 = self.create_font(int(10 + size * 10))
 
         [self.content[pos].setFont(font1) for pos in self.content.keys()]
         self.titel.setFont(font2)
 
-    @staticmethod
-    def create_font(style: str = 'Times', size=14):
-        font = QFont(style)
+    def create_font(self, size=14):
+        font = QFont(self.font_type)
         font.setPointSize(int(size))
         return font
     
 
+class Sudoku_SettingsView(QWidget):
+    def __init__(self, parent = None):
+        super().__init__(self, parent)
+    
+
 class Sudoku_Messager(QWidget):
-    def __init__(self, parent, titel_message, message):
+    def __init__(self, parent, titel_message, message, font_type):
         super().__init__()
 
         self.setWindowTitle('Sudoku - v1.0 Alpha')
@@ -267,6 +283,7 @@ class Sudoku_Messager(QWidget):
         self.show()
 
         self.parent = parent
+        self.font_type = font_type
 
         layout = QGridLayout()
 
@@ -280,7 +297,7 @@ class Sudoku_Messager(QWidget):
 
         message = QLabel(message)
         message.setWordWrap(True)
-        message.setFont(self.create_font('Times', 10))
+        message.setFont(self.create_font(10))
         layout.addWidget(message, 2, 0, Qt.AlignmentFlag.AlignCenter)
 
         close = QPushButton("close")
@@ -292,9 +309,8 @@ class Sudoku_Messager(QWidget):
     def close(self):
         self.destroy()
 
-    @staticmethod
-    def create_font(style: str = 'Times', size=14, bold = False):
-        font = QFont(style)
+    def create_font(self, size=14, bold = False):
+        font = QFont(self.font_type)
         font.setPointSize(int(size))
         font.setBold(bold)
         return font
@@ -308,8 +324,11 @@ class Sudoku_Window(QMainWindow):
         self.setGeometry(0, 0, 1100, 800)
 
         self.generator = Sudoku_Generator()
-        self.statistics = Sudoku_Statistics()
-
+        self.setup = Sudoku_Settings()
+        self.mws = self.setup.setup_mainwin()
+        self.wis = self.setup.setup_widget()
+        self.statistics = Sudoku_Statistics(self.setup.config, self.setup.dir)
+        
         self._init_menubar()
         self.home()
 
@@ -361,13 +380,13 @@ class Sudoku_Window(QMainWindow):
         self.message = Sudoku_Messager(self, "Try Again", "You used to many false trys, its not over, try again")
 
     def home(self):
-        self.active_widget = Sudoku_HomeScreen(self)
+        self.active_widget = Sudoku_HomeScreen(self, self.mws["standart_difficulty"], self.mws["font_type"])
         self.setCentralWidget(self.active_widget)
 
     def save_sudoku(self):
         if isinstance(self.active_widget, Sudoku_Widget):
             with open('Latest_Sudoku.json', 'w') as f:
-                values = [dict(), self.active_widget.sudoku_solution]
+                values = [dict(), self.active_widget.sudoku_solution, self.difficulty]
                 for field in self.active_widget.sudoku_display.keys():
                     values[0][field] = self.active_widget.sudoku_display[field].text()
                 json.dump(values, f, indent = 1)
@@ -375,8 +394,8 @@ class Sudoku_Window(QMainWindow):
     def load_sudoku(self):
         try:
             with open('Latest_Sudoku.json', 'r') as f:
-                sudoku, solution = json.load(f)
-                self.active_widget = Sudoku_Widget(sudoku, solution)
+                sudoku, solution, self.difficulty = json.load(f)
+                self.active_widget = Sudoku_Widget(self.wis, sudoku, solution, self, self.difficulty)
                 self.setCentralWidget(self.active_widget)
         except FileNotFoundError:
             return 'E1'
@@ -389,53 +408,39 @@ class Sudoku_Window(QMainWindow):
 
     def show_statistics(self):
         stats = {index: self.statistics.get_statistics(index) for index in ["easy", "medium", "hard", "master", "total"]}
-        self.active_widget = Sudoku_StatisticsView(stats, self)
+        self.active_widget = Sudoku_StatisticsView(stats, self, self.mws["font_type"])
         self.setCentralWidget(self.active_widget)
 
     def create_easy(self):
         # Reset to -E for normal games, -S is for developing reasons (very easy)
-        sudoku, solution = self.generator.play(True, '-E')
-        self.active_widget = Sudoku_Widget(sudoku, solution, self, 15)
-        self.setCentralWidget(self.active_widget)
         self.difficulty = 'easy'
+        sudoku, solution = self.generator.play(True, '-E')
+        self.active_widget = Sudoku_Widget(self.wis, sudoku, solution, self, self.difficulty)
+        self.setCentralWidget(self.active_widget)
 
     def create_medium(self):
-        sudoku, solution = self.generator.play(True, '-M')
-        self.active_widget = Sudoku_Widget(sudoku, solution, self, 8)
-        self.setCentralWidget(self.active_widget)
         self.difficulty = 'medium'
-
+        sudoku, solution = self.generator.play(True, '-M')
+        self.active_widget = Sudoku_Widget(self.wis, sudoku, solution, self, self.difficulty)
+        self.setCentralWidget(self.active_widget)
+        
     def create_hard(self):
-        sudoku, solution = self.generator.play(True, '-S')
-        self.active_widget = Sudoku_Widget(sudoku, solution, self, 3)
-        self.setCentralWidget(self.active_widget)
         self.difficulty = 'hard'
-
-    def create_master(self):
-        sudoku, solution = self.generator.play(True, '-I')
-        self.active_widget = Sudoku_Widget(sudoku, solution, self, 1)
+        sudoku, solution = self.generator.play(True, '-S')
+        self.active_widget = Sudoku_Widget(self.wis, sudoku, solution, self, self.difficulty)
         self.setCentralWidget(self.active_widget)
+        
+    def create_master(self):
         self.difficulty = 'master'
-
+        sudoku, solution = self.generator.play(True, '-I')
+        self.active_widget = Sudoku_Widget(self.wis, sudoku, solution, self, self.difficulty)
+        self.setCentralWidget(self.active_widget)
+        
 
 class Sudoku_Statistics:
-    def __init__(self):
-        if os.path.exists('config.json'):
-            with open('config.json', 'r') as f:
-                self.config = json.load(f)
-                self.dir = ""
-        else:
-            print('1')
-            path_to_user = os.path.expanduser('~')
-            path_to_dir = "Appdata\\Local\\Programms\\Sudoku"
-            self.dir = os.path.join(path_to_user, path_to_dir)
-            if os.path.exists(os.path.join(self.dir, "config.json")):
-                with open(os.path.join(self.dir, "config.json")) as f:
-                    self.config = json.load(f)
-            else:
-                raise RuntimeError("Can't find config file")
-
-        self.st_path = self.config['paths']['statistics']
+    def __init__(self, config: dict, dir):
+        self.st_path = config["paths"]["statistics"]
+        self.dir = dir
 
     def get_statistics(self, typ: str):
         try:
@@ -452,6 +457,37 @@ class Sudoku_Statistics:
         with open(os.path.join(self.dir, self.st_path), 'w') as f:
             self.statistics[typ] += value
             json.dump(self.statistics, f, indent = 1)
+
+
+class Sudoku_Settings:
+    def __init__(self):
+        if os.path.exists('config.json'):
+            with open('config.json', 'r') as f:
+                self.config = json.load(f)
+                self.dir = ""
+        else:
+            path_to_user = os.path.expanduser('~')
+            path_to_dir = "Appdata\\Local\\Programms\\Sudoku"
+            self.dir = os.path.join(path_to_user, path_to_dir)
+            if os.path.exists(os.path.join(self.dir, "config.json")):
+                with open(os.path.join(self.dir, "config.json")) as f:
+                    self.config = json.load(f)
+            else:
+                raise RuntimeError("Can't find config file")
+    
+    def setup_mainwin(self):
+        return self.config["setup"]["window"]
+    
+    def setup_widget(self):
+        return self.config["setup"]["widget"]
+    
+    def setup_generator(self):
+        return self.config["setup"]["generator"]
+
+
+    
+
+
 
 
 ######################### --- Main Programm --- ###############################

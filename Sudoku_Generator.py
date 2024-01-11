@@ -412,7 +412,7 @@ class Sudoku_Generator:
               self.I8, ' ', self.I9)
         print('\n\n')
 
-    def play(self, for_gui = True, modus='-M'):
+    def play(self, for_gui = True, modus='-M', key = {"easy": 40, "medium": 55, "hard": 70, "master": 100}):
 
         simple = ['-S', 'Simple']
         einfach = ['-E', 'Easy']
@@ -431,22 +431,22 @@ class Sudoku_Generator:
                 sudoku[pos] = ' '
 
         elif modus in einfach:
-            for i in range(40):
+            for i in range(key["easy"]):
                 pos = random.choice(tuple(sudoku.keys()))
                 sudoku[pos] = ' '
 
         elif modus in mittel:
-            for i in range(55):
+            for i in range(key["medium"]):
                 pos = random.choice(tuple(sudoku.keys()))
                 sudoku[pos] = ' '
 
         elif modus in schwer:
-            for i in range(70):
+            for i in range(key["hard"]):
                 pos = random.choice(tuple(sudoku.keys()))
                 sudoku[pos] = ' '
 
         elif modus in unmoeglich:
-            for i in range(100):
+            for i in range(key["master"]):
                 pos = random.choice(tuple(sudoku.keys()))
                 sudoku[pos] = ' '
 
