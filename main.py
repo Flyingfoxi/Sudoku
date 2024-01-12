@@ -93,7 +93,7 @@ class Sudoku_Widget(QWidget):
         if not self.auto_commit:
             self.commit = QPushButton("check")
             self.commit.clicked.connect(self.check)
-            layout.addWidget(self.commit, 13, 1, 1, 10, Qt.AlignmentFlag.AlignCenter)
+            layout.addWidget(self.commit, 13, 5, 1, 1, Qt.AlignmentFlag.AlignCenter)
 
         layout.addItem(QSpacerItem(25, 10), 0, 3)
         layout.addItem(QSpacerItem(25, 10), 0, 7)
@@ -113,7 +113,7 @@ class Sudoku_Widget(QWidget):
         for key in self.sudoku_display.keys():
             field = self.sudoku_display[key]
             if isinstance(field, QLineEdit):
-                if '-' not in field.text():
+                if self.config["notes"] not in field.text():
                     if field.text() in nums:
                         pos = self.layout().getItemPosition(self.layout().indexOf(field))
 
@@ -135,7 +135,7 @@ class Sudoku_Widget(QWidget):
                         else:
                             self.trys -= 1
                             field.setText('')
-                            self.out.setText(f"Wrong, you have {self.trys} left")
+                            self.out.setText(f"\tWrong, you have {self.trys} left")
                             if self.trys == 0:
                                 [obj.setReadOnly(True) for obj in self.sudoku_display.values() if isinstance(obj, QLineEdit)]
                                 self.parent.failed()
@@ -167,10 +167,10 @@ class Sudoku_Widget(QWidget):
             pen.drawLine(75, int((h - 10) / 3) + 65, w - 75, int((h - 10) / 3) + 65)
             pen.drawLine(75, int((h - 25) / 3) * 2 + 20, w - 75, int((h - 25) / 3) * 2 + 20)
         else:
-            pen.drawLine(int(w / 3) + 20, 75, int(w / 3) + 20, h - 125)
-            pen.drawLine(int(w / 3) * 2 - 20, 75, int(w / 3) * 2 - 20, h - 125)
-            pen.drawLine(75, int(h / 3), w - 75, int(h / 3))
-            pen.drawLine(75, int(h / 3) * 2 - 50, w - 75, int(h / 3) * 2 - 50)
+            pen.drawLine(int(w / 3) + 20, 125, int(w / 3) + 20, h - 125)
+            pen.drawLine(int(w / 3) * 2 - 20, 125, int(w / 3) * 2 - 20, h - 125)
+            pen.drawLine(75, int((h - 10) / 3) + 35, w - 75, int((h - 10) / 3 + 35))
+            pen.drawLine(75, int((h - 25) / 3) * 2 - 20, w - 75, int((h - 25) / 3) * 2 - 20)
             pen.end()
 
     def getsize(self):
@@ -446,13 +446,13 @@ class Sudoku_Window(QMainWindow):
 
 class Sudoku_Statistics:
     def __init__(self, config: dict, sdir):
-        self.st_path = config["paths"]["config"]
+        self.st_path = config["paths"]["statistics"]
         self.dir = sdir
 
     def get_statistics(self, typ: str):
         try:
             with open(os.path.join(self.dir + self.st_path), 'r') as f:
-                self.statistics = json.load(f)["statistics"]
+                self.statistics = eval(f.read())
                 return self.statistics[typ]
         except FileNotFoundError:
             raise 'E2'
@@ -461,20 +461,16 @@ class Sudoku_Statistics:
         if typ in ["easy", "medium", "hard", "master"]:
             self.add_statistics("total", value)
         self.get_statistics("total")
-        with open(os.path.join(self.dir, self.st_path), 'r') as f:
-            data = json.load(f)
 
         with open(os.path.join(self.dir, self.st_path), 'w') as f:
-            self.statistics[typ] += value
-            data["statistics"] = self.statistics
-            json.dump(data, f, indent = 1)
+            json.dump(self.statistics, f, indent = 1)
 
 
 class Sudoku_Settings:
     def __init__(self):
         if os.path.exists('config.json'):
             with open('config.json', 'r') as f:
-                self.config = json.load(f)["config"]
+                self.config = json.load(f)
                 self.dir = ""
         else:
             path_to_user = os.path.expanduser('~')

@@ -1,43 +1,34 @@
 {
-  "statistics": {
-    "easy": 0,
-    "medium": 0,
-    "hard": 0,
-    "master": 0,
-    "total": 0
-  },
-
-  "config": {
-    "paths": {
-      "config": "statistics.json",
-      "last_sudoku": "latest_Sudoku.json",
-      "generator": "Sudoku_Generator.py",
-      "program": "main.py"
-    },
-    "setup": {
-      "window": {
-        "standart_difficulty": "medium",
-        "font_type": "Arial"
-      },
-      "widget": {
-        "auto-commit": "False",
-        "font_type": "Arial",
-        "trys": {
-          "easy": 8,
-          "medium": 5,
-          "hard": 3,
-          "master": 1
-        }
-      },
-      "generator": {
-        "easy": 40,
-        "medium": 55,
-        "hard": 70,
-        "master": 100
-      }
-    },
-    "username": "Admin",
-    "password": "3768",
-    "name": "Administrator"
-  }
+     "paths": {
+          "statistics": "statistics.json",
+          "last_sudoku": "latest_Sudoku.json",
+          "generator": "Sudoku_Generator.py",
+          "program": "main.py"
+     },
+     "setup": {
+          "window": {
+               "standart_difficulty": "medium",
+               "font_type": "Arial"
+          },
+          "widget": {
+               "auto-commit": "True",
+               "font_type": "Arial",
+               "notes": "-",
+               "trys": {
+                    "easy": 8,
+                    "medium": 5,
+                    "hard": 3,
+                    "master": 1
+               }
+          },
+          "generator": {
+               "easy": 40,
+               "medium": 55,
+               "hard": 70,
+               "master": 100
+          }
+     },
+     "username": "Admin",
+     "password": "3768",
+     "name": "Administrator"
 }
