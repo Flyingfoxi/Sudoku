@@ -18,7 +18,8 @@ from PyQt6.QtWidgets import (
     QGridLayout,
     QMainWindow,
     QPushButton,
-    QCheckBox
+    QCheckBox,
+    QComboBox
 )
 
 from PyQt6.QtCore import (
@@ -40,7 +41,7 @@ from PyQt6.QtGui import (
 
 
 class Sudoku_Widget(QWidget):
-    def __init__(self, config: dict, sudoku: dict, solution: dict, parent: QMainWindow = None, difficulty = "medium"):
+    def __init__(self, config: dict, sudoku: dict, solution: dict, parent: QMainWindow = None, difficulty: str = "medium"):
         super().__init__(parent)
         self.parent = parent
 
@@ -52,14 +53,21 @@ class Sudoku_Widget(QWidget):
         layout = QGridLayout()
         layout.setContentsMargins(QMargins(75, 75, 75, 75))
 
-        nums = [0, 1, 2, 4, 5, 6, 8, 9, 10]
-        letters = [i for i in 'ABCDEFGHI']
+        nums = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+        letters = [i for i in 'ABC-DEF-GHI']
         self.translation_to_letters = {int(nums[i]): letters[i] for i in range(len(nums))}
+
         self.auto_commit = (config["auto-commit"] == "True")
         self.config = config
 
+        ### Interface ###
+
+        self.out = QLabel("")
+        self.out.setStyleSheet("color: red")
+        layout.addWidget(self.out, 0, 0, 1, 10, Qt.AlignmentFlag.AlignCenter)
+
         sudoku_display = {}
-        modr = -2
+        modr = -1
 
         for rowblock in ['ABC', 'DEF', 'GHI']:
             modr += 1
@@ -83,14 +91,14 @@ class Sudoku_Widget(QWidget):
                                          Qt.AlignmentFlag.AlignCenter)
                         
         if not self.auto_commit:
-            self.commit = QPushButton("Prüfen")
+            self.commit = QPushButton("check")
             self.commit.clicked.connect(self.check)
-            layout.addWidget(self.commit, 12, 1, 1, 10, Qt.AlignmentFlag.AlignCenter)
+            layout.addWidget(self.commit, 13, 1, 1, 10, Qt.AlignmentFlag.AlignCenter)
 
         layout.addItem(QSpacerItem(25, 10), 0, 3)
         layout.addItem(QSpacerItem(25, 10), 0, 7)
-        layout.addItem(QSpacerItem(10, 25), 3, 0)
-        layout.addItem(QSpacerItem(10, 25), 7, 0)
+        layout.addItem(QSpacerItem(10, 25), 4, 0)
+        layout.addItem(QSpacerItem(10, 25), 8, 0)
 
         self.trys = config["trys"][difficulty]
         self.sudoku_display = sudoku_display.copy()
@@ -122,10 +130,12 @@ class Sudoku_Widget(QWidget):
                             # noinspection PyArgumentList
                             self.layout().addWidget(self.sudoku_display[key],
                                                     pos[0], pos[1], 1, 1, Qt.AlignmentFlag.AlignCenter)
+                            self.out.setText('')
+
                         else:
                             self.trys -= 1
                             field.setText('')
-                            print('Trys left: ', self.trys)
+                            self.out.setText(f"Wrong, you have {self.trys} left")
                             if self.trys == 0:
                                 [obj.setReadOnly(True) for obj in self.sudoku_display.values() if isinstance(obj, QLineEdit)]
                                 self.parent.failed()
@@ -152,10 +162,10 @@ class Sudoku_Widget(QWidget):
         h = self.geometry().height()
 
         if self.auto_commit:
-            pen.drawLine(int(w / 3) + 20, 75, int(w / 3) + 20, h - 75)
-            pen.drawLine(int(w / 3) * 2 - 20, 75, int(w / 3) * 2 - 20, h - 75)
-            pen.drawLine(75, int(h / 3) + 20, w - 75, int(h / 3) + 20)
-            pen.drawLine(75, int(h / 3) * 2 - 20, w - 75, int(h / 3) * 2 - 20)
+            pen.drawLine(int(w / 3) + 20, 125, int(w / 3) + 20, h - 75)
+            pen.drawLine(int(w / 3) * 2 - 20, 125, int(w / 3) * 2 - 20, h - 75)
+            pen.drawLine(75, int((h - 10)/ 3) + 65, w - 75, int((h - 10) / 3) + 65)
+            pen.drawLine(75, int((h - 25) / 3) * 2 + 20, w - 75, int((h - 25) / 3) * 2 + 20)
         else:
             pen.drawLine(int(w / 3) + 20, 75, int(w / 3) + 20, h - 125)
             pen.drawLine(int(w / 3) * 2 - 20, 75, int(w / 3) * 2 - 20, h - 125)
@@ -177,6 +187,7 @@ class Sudoku_Widget(QWidget):
             field.setFont(self.create_font(int(self.size * 1.25 + 5)))
             field.setFixedSize(int((w - 150) / 12), int((h - 150) / 15))
             field.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.out.setFont(self.create_font(int(self.size * 1.25 + 5)))
            
     def create_font(self, size=10):
         font = QFont(self.config["font_type"])
@@ -263,65 +274,6 @@ class Sudoku_StatisticsView(QWidget):
         font2 = self.create_font(int(10 + size * 10))
 
         [self.content[pos].setFont(font1) for pos in self.content.keys()]
-        self.titel.setFont(font2)
-
-    def create_font(self, size=14):
-        font = QFont(self.font_type)
-        font.setPointSize(int(size))
-        return font
-    
-
-class Sudoku_SettingsView(QWidget):
-    def __init__(self, config_file, parent = None):
-        super().__init__(parent)
-        self.parent = parent
-
-        layout = QGridLayout()
-        self.config = config_file
-        self.font_type = config_file["window"]["font_type"]
-
-        self.titel = QLabel("Settings")
-        self.apply = QPushButton("Apply")
-        self.apply.clicked.connect(self.update_settings)
-        layout.addWidget(self.titel, 0, 0, 1, 2, Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(self.apply, 3, 0, 1, 2, Qt.AlignmentFlag.AlignCenter)
-
-        self.auto_commit = (QLabel("Auto - Commit: "), QCheckBox(), ('widget', 'auto-commit'), ("True", "False"))
-        self.auto_commit[1].setChecked(bool(config_file["widget"]["auto-commit"]))
-        self.auto_commit[1].setIcon(QIcon("automatic.png"))
-        self.auto_commit[1].setIconSize(QSize(50, 50))
-        self.standart_difficuly = (QLabel("Standart Difficulty: "),  QLineEdit(config_file["window"]["standart_difficulty"]), ('window', 'standart_difficulty'),
-                                   ("easy", "medium", "hard", "master"))
-
-        self.settings = (self.auto_commit, self.standart_difficuly)
-        for row in range(2):
-            for collum in range(2):
-                layout.addWidget(self.settings[row][collum], row + 1, collum, 1, 1, Qt.AlignmentFlag.AlignCenter)
-
-        self.setLayout(layout)
-
-    def update_settings(self):
-        for setting in self.settings:
-            if isinstance(setting[1], QCheckBox):
-                if str(setting[1].isChecked()) in setting[3]:
-                    self.config[setting[2][0]][setting[2][1]] = str(setting[1].isChecked())
-
-            elif isinstance(setting[1], QLineEdit):
-                if str(setting[1].text()) in setting[3]:
-                    self.config[setting[2][0]][setting[2][1]] = str(setting[1].text())
-        self.parent.home()
-
-
-    def resizeEvent(self, event):
-        w = self.geometry().width()
-        h = self.geometry().height()
-        size = abs(int((w - 150 * h - 150) / 10000))
-
-        font1 = self.create_font(int(5 + size * 2))
-        font2 = self.create_font(int(20 + size * 6))
-
-        [setup[0].setFont(font1) for setup in self.settings]
-        [setup[1].setFont(font1) for setup in self.settings]
         self.titel.setFont(font2)
 
     def create_font(self, size=14):
@@ -420,18 +372,12 @@ class Sudoku_Window(QMainWindow):
         home.setStatusTip('Returns to the starting Padge')
         home.triggered.connect(self.home)
 
-        settings = QAction('Settings', self)
-        settings.setStatusTip("To change the settings how the game Works")
-        settings.triggered.connect(self.show_settings)
-
         statistics_show = QAction('Show Statistics', self)
         statistics_show.setStatusTip('Let your take a look over your Statistics')
         statistics_show.triggered.connect(self.show_statistics)
 
         menu_sudoku_create.addActions((create_easy, create_medium, create_hard, create_master))
         menu_file.addAction(home)
-        menu_file.addSeparator()
-        menu_file.addAction(settings)
         menu_sudoku.addSeparator()
         menu_sudoku.addActions((save, load))
         menu_statistics.addAction(statistics_show)
@@ -473,10 +419,6 @@ class Sudoku_Window(QMainWindow):
     def show_statistics(self):
         stats = {index: self.statistics.get_statistics(index) for index in ["easy", "medium", "hard", "master", "total"]}
         self.active_widget = Sudoku_StatisticsView(stats, self, self.mws["font_type"])
-        self.setCentralWidget(self.active_widget)
-
-    def show_settings(self):
-        self.active_widget = Sudoku_SettingsView(self.setup.config["setup"], self)
         self.setCentralWidget(self.active_widget)
 
     def create_easy(self):

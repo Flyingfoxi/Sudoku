@@ -12,7 +12,7 @@
       },
     
     "widget": {
-      "auto-commit": "True",
+      "auto-commit": "False",
       "font_type": "Arial",
       "trys" : {
         "easy": 8,
