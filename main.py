@@ -164,7 +164,7 @@ class Sudoku_Widget(QWidget):
         if self.auto_commit:
             pen.drawLine(int(w / 3) + 20, 125, int(w / 3) + 20, h - 75)
             pen.drawLine(int(w / 3) * 2 - 20, 125, int(w / 3) * 2 - 20, h - 75)
-            pen.drawLine(75, int((h - 10)/ 3) + 65, w - 75, int((h - 10) / 3) + 65)
+            pen.drawLine(75, int((h - 10) / 3) + 65, w - 75, int((h - 10) / 3) + 65)
             pen.drawLine(75, int((h - 25) / 3) * 2 + 20, w - 75, int((h - 25) / 3) * 2 + 20)
         else:
             pen.drawLine(int(w / 3) + 20, 75, int(w / 3) + 20, h - 125)
@@ -365,9 +365,6 @@ class Sudoku_Window(QMainWindow):
         create_hard.triggered.connect(self.create_hard)
         create_master.triggered.connect(self.create_master)
 
-        account_login = QAction('Login', self)
-        account_logout = QAction('Logout', self)
-
         home = QAction('Home', self)
         home.setStatusTip('Returns to the starting Padge')
         home.triggered.connect(self.home)
@@ -449,13 +446,13 @@ class Sudoku_Window(QMainWindow):
 
 class Sudoku_Statistics:
     def __init__(self, config: dict, sdir):
-        self.st_path = config["paths"]["statistics"]
+        self.st_path = config["paths"]["config"]
         self.dir = sdir
 
     def get_statistics(self, typ: str):
         try:
             with open(os.path.join(self.dir + self.st_path), 'r') as f:
-                self.statistics = json.load(f)
+                self.statistics = json.load(f)["statistics"]
                 return self.statistics[typ]
         except FileNotFoundError:
             raise 'E2'
@@ -464,16 +461,20 @@ class Sudoku_Statistics:
         if typ in ["easy", "medium", "hard", "master"]:
             self.add_statistics("total", value)
         self.get_statistics("total")
+        with open(os.path.join(self.dir, self.st_path), 'r') as f:
+            data = json.load(f)
+
         with open(os.path.join(self.dir, self.st_path), 'w') as f:
             self.statistics[typ] += value
-            json.dump(self.statistics, f, indent = 1)
+            data["statistics"] = self.statistics
+            json.dump(data, f, indent = 1)
 
 
 class Sudoku_Settings:
     def __init__(self):
         if os.path.exists('config.json'):
             with open('config.json', 'r') as f:
-                self.config = json.load(f)
+                self.config = json.load(f)["config"]
                 self.dir = ""
         else:
             path_to_user = os.path.expanduser('~')
@@ -481,7 +482,7 @@ class Sudoku_Settings:
             self.dir = os.path.join(path_to_user, path_to_dir)
             if os.path.exists(os.path.join(self.dir, "config.json")):
                 with open(os.path.join(self.dir, "config.json")) as f:
-                    self.config = json.load(f)
+                    self.config = json.load(f)["config"]
             else:
                 raise RuntimeError("Can't find config file")
     
