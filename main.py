@@ -11,29 +11,25 @@ import os, json
 from Sudoku_Generator import Sudoku_Generator
 from PyQt6.QtWidgets import (
     QApplication,
-    QWidget,
-    QSpacerItem,
-    QLabel,
-    QLineEdit,
     QGridLayout,
     QMainWindow,
     QPushButton,
-    QCheckBox,
-    QComboBox
+    QSpacerItem,
+    QLineEdit,
+    QWidget,
+    QLabel,
 )
 
 from PyQt6.QtCore import (
-    Qt,
     QMargins,
-    QSize
+    Qt,
 )
 
 from PyQt6.QtGui import (
     QPainter,
-    QPen,
     QAction,
     QFont,
-    QIcon
+    QPen
 )
 
 
