@@ -13,7 +13,7 @@
           "widget": {
                "auto-commit": "True",
                "font_type": "Arial",
-               "notes": "-",
+               "comment": "-",
                "trys": {
                     "easy": 8,
                     "medium": 5,

@@ -109,7 +109,7 @@ class Sudoku_Widget(QWidget):
         for key in self.sudoku_display.keys():
             field = self.sudoku_display[key]
             if isinstance(field, QLineEdit):
-                if self.config["notes"] not in field.text():
+                if self.config["comment"] not in field.text():
                     if field.text() in nums:
                         pos = self.layout().getItemPosition(self.layout().indexOf(field))
 
@@ -131,7 +131,7 @@ class Sudoku_Widget(QWidget):
                         else:
                             self.trys -= 1
                             field.setText('')
-                            self.out.setText(f"\tWrong, you have {self.trys} left")
+                            self.out.setText(f"\tWrong, you have {self.trys} trys left")
                             if self.trys == 0:
                                 [obj.setReadOnly(True) for obj in self.sudoku_display.values() if isinstance(obj, QLineEdit)]
                                 self.parent.failed()
